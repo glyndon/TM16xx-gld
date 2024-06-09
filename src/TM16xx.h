@@ -16,15 +16,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #ifndef TM16XX_h
 #define TM16XX_h
 
-#if defined(ARDUINO) && ARDUINO >= 100
-	#include "Arduino.h"
-#else
-	#include "WProgram.h"
-#endif
+#include "Arduino.h"
 
 #if !defined(__max)
 // MMOLE 180325: min, max are no macro in ESP core 2.3.9 libraries, see https://github.com/esp8266/Arduino/issues/398
@@ -63,17 +58,20 @@ class TM16xx
   public:
     /**
      * Instantiate a TM16xx module specifying data, clock and strobe pins (no strobe on some modules),
-     * the maximum number of displays supported by the chip (as provided by derived chip specific class), 
-     * the number of digits used to display numbers or text, 
-     * display state and the starting intensity (0-7).
+     * maxDisplays - the maximum number of displays supported by the chip (as provided by derived chip specific class), 
+     * nDigitsUsed - the number of digits used to display numbers or text, 
      */
     TM16xx(byte dataPin, byte clockPin, byte strobePin, byte maxDisplays, byte nDigitsUsed, bool activateDisplay=true,	byte intensity=7);
+    /** DEPRECATED: activation, intensity (0-7) and display mode are no longer used by constructor. */
 
     /** Set the display (segments and LEDs) active or off and intensity (range from 0-7). */
     virtual void setupDisplay(bool active, byte intensity);
 
     /** Clear the display */
 		virtual void clearDisplay();
+
+    /** Use explicit call in setup() or rely on implicit call by sendData(); calls setupDisplay() and clearDisplay() */
+    virtual void begin(bool activateDisplay=true, byte intensity=7);
 
     /** Set segments of the display */
 	  virtual void setSegments(byte segments, byte position);
@@ -92,7 +90,9 @@ class TM16xx
     /** Set the display to the string (defaults to built in font) */
 		virtual void setDisplayToString(const char* string, const word dots=0, const byte pos=0, const byte font[] = TM16XX_FONT_DEFAULT);
 		virtual void sendChar(byte pos, byte data, bool dot); // made public to allow calling from TM16xxDisplay
-		virtual byte getNumDigits(); // added as public menthod to allow calling from TM16xxDisplay
+		virtual void setNumDigits(byte numDigitsUsed);   // set number of digits used for alignment
+		virtual byte getNumDigits(); // called by TM16xxDisplay to combine multiple modules
+
 		virtual void sendAsciiChar(byte pos, char c, bool dot); // made public to allow calling from TM16xxDisplay
 
 		// Key-scanning functions
